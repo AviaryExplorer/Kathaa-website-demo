@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumière Dining | Fine Dining Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'gold': {
+                            400: '#D4AF37',
+                            500: '#C5A028',
+                            600: '#B8941F',
+                        },
+                        'dark': {
+                            900: '#0a0a0a',
+                            800: '#141414',
+                            700: '#1a1a1a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        
+        .text-reveal {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+        }
+        
+        .hover-underline-animation {
+            display: inline-block;
+            position: relative;
+        }
+        
+        .hover-underline-animation::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            transform: scaleX(0);
+            height: 1px;
+            bottom: 0;
+            left: 0;
+            background-color: #D4AF37;
+            transform-origin: bottom right;
+            transition: transform 0.3s ease-out;
+        }
+        
+        .hover-underline-animation:hover::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+        
+        .menu-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .menu-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.15);
+        }
+        
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translate(0, 0px); }
+            50% { transform: translate(0, 15px); }
+            100% { transform: translate(0, -0px); }
+        }
+        
+        .spin-slow {
+            animation: spin 20s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .cursor-glow {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, rgba(0,0,0,0) 70%);
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+        }
+        
+        .star-rating {
+            color: #D4AF37;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+        
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        
+        .scroll-indicator {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .divider-gold {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-gold-400 selection:text-dark-900">
+
+    <div class="grain"></div>
+    <div class="cursor-glow hidden md:block" id="cursorGlow"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 transition-all duration-500" id="navbar">
+        <div class="glass-panel border-b border-white/5">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center gap-3 group cursor-pointer">
+                    <div class="w-10 h-10 border border-gold-400/30 rounded-full flex items-center justify-center group-hover:border-gold-400 transition-colors duration-300">
+                        <span class="font-serif text-gold-400 text-xl">L</span>
+                    </div>
+                    <span class="font-serif text-2xl tracking-wider text-white group-hover:text-gold-400 transition-colors">Lumière</span>
+                </div>
+                
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#home" class="text-sm uppercase tracking-widest hover-underline-animation text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="#about" class="text-sm uppercase tracking-widest hover-underline-animation text-gray-300 hover:text-white transition-colors">Story</a>
+                    <a href="#menu" class="text-sm uppercase tracking-widest hover-underline-animation text-gray-300 hover:text-white transition-colors">Menu</a>
+                    <a href="#hours" class="text-sm uppercase tracking-widest hover-underline-animation text-gray-300 hover:text-white transition-colors">Hours</a>
+                    <a href="#reviews" class="text-sm uppercase tracking-widest hover-underline-animation text-gray-300 hover:text-white transition-colors">Reviews</a>
+                </div>
+
+                <button class="bg-gold-400 text-dark-900 px-6 py-2 rounded-full font-medium hover:bg-white transition-all duration-300 transform hover:scale-105 shadow-lg shadow-gold-400/20">
+                    Reserve Table
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <div class="absolute inset-0 bg-gradient-to-b from-dark-900/50 via-dark-900/70 to-dark-900 z-10"></div>
+            <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
+                 alt="Fine Dining" 
+                 class="w-full h-full object-cover scale-110" 
+                 id="heroImage">
+        </div>
+
+        <div class="relative z-20 text-center px-6 max-w-5xl mx-auto">
+            <div class="mb-6 overflow-hidden">
+                <p class="text-gold-400 uppercase tracking-[0.3em] text-sm font-medium animate-fade-in" id="heroSubtitle">Est. 2024</p>
+            </div>
+            
+            <h1 class="font-serif text-6xl md:text-8xl lg:text-9xl font-bold mb-8 leading-tight" id="heroTitle">
+                <span class="block overflow-hidden">
+                    <span class="inline-block transform translate-y-full" id="titleLine1">Lumière</span>
+                </span>
+                <span class="block overflow-hidden text-transparent bg-clip-text bg-gradient-to-r from-gold-400 via-yellow-200 to-gold-400">
+                    <span class="inline-block transform translate-y-full italic text-5xl md:text-7xl lg:text-8xl" id="titleLine2">Dining</span>
+                </span>
+            </h1>
+            
+            <p class="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-12 opacity-0" id="heroDesc">
+                Where culinary artistry meets timeless elegance. An intimate journey through flavors, textures, and unforgettable moments.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center opacity-0" id="heroButtons">
+                <button class="group relative px-8 py-4 bg-transparent border border-gold-400 text-gold-400 rounded-full overflow-hidden transition-all duration-300 hover:text-dark-900">
+                    <span class="absolute inset-0 bg-gold-400 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></span>
+                    <span class="relative z-10 font-medium tracking-wider">View Menu</span>
+                </button>
+                <button class="px-8 py-4 text-white hover:text-gold-400 transition-colors duration-300 flex items-center gap-2 group">
+                    <span class="tracking-wider">Watch Film</span>
+                    <i class="fas fa-play-circle text-2xl group-hover:scale-110 transition-transform"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 scroll-indicator opacity-0" id="scrollInd">
+            <div class="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
+                <div class="w-1 h-2 bg-gold-400 rounded-full animate-bounce"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About / Story Section -->
+    <section id="about" class="py-32 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div class="relative">
+                    <div class="absolute -top-10 -left-10 w-40 h-40 border border-gold-400/20 rounded-full spin-slow"></div>
+                    <div class="absolute -bottom-10 -right-10 w-60 h-60 border border-gold-400/10 rounded-full spin-slow" style="animation-direction: reverse;"></div>
+                    
+                    <div class="relative z-10 grid grid-cols-2 gap-4">
+                        <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                             alt="Chef" 
+                             class="w-full h-80 object-cover rounded-lg transform translate-y-12 shadow-2xl about-img">
+                        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                             alt="Dish" 
+                             class="w-full h-80 object-cover rounded-lg shadow-2xl about-img">
+                    </div>
+                </div>
+                
+                <div class="space-y-8">
+                    <div class="space-y-2">
+                        <p class="text-gold-400 uppercase tracking-[0.2em] text-sm">Our Story</p>
+                        <h2 class="font-serif text-5xl md:text-6xl font-bold leading-tight">
+                            A Legacy of <span class="italic text-gold-400">Excellence</span>
+                        </h2>
+                    </div>
+                    
+                    <div class="space-y-6 text-gray-400 text-lg leading-relaxed">
+                        <p class="about-text">
+                            Founded by Chef Antoine Laurent in the heart of the city, Lumière began as a humble bistro with a vision to redefine fine dining. Today, we stand as a beacon of culinary innovation, blending classical techniques with contemporary artistry.
+                        </p>
+                        <p class="about-text">
+                            Every dish tells a story, sourced from local artisans and sustainable farms. Our open kitchen invites you to witness the passion and precision that goes into every plate.
+                        </p>
+                    </div>
+                    
+                    <div class="flex items-center gap-8 pt-4">
+                        <div class="text-center">
+                            <p class="font-serif text-4xl text-gold-400 font-bold">15+</p>
+                            <p class="text-sm text-gray-500 uppercase tracking-wider mt-1">Years Experience</p>
+                        </div>
+                        <div class="w-px h-12 bg-white/10"></div>
+                        <div class="text-center">
+                            <p class="font-serif text-4xl text-gold-400 font-bold">2</p>
+                            <p class="text-sm text-gray-500 uppercase tracking-wider mt-1">Michelin Stars</p>
+                        </div>
+                        <div class="w-px h-12 bg-white/10"></div>
+                        <div class="text-center">
+                            <p class="font-serif text-4xl text-gold-400 font-bold">50k+</p>
+                            <p class="text-sm text-gray-500 uppercase tracking-wider mt-1">Happy Guests</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="py-32 relative bg-dark-800/50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20">
+                <p class="text-gold-400 uppercase tracking-[0.3em] text-sm mb-4">Culinary Delights</p>
+                <h2 class="font-serif text-5xl md:text-6xl font-bold mb-6">The Menu</h2>
+                <div class="divider-gold w-24 mx-auto mb-8"></div>
+                <p class="text-gray-400 max-w-2xl mx-auto">Seasonal ingredients, masterful preparation, and artistic presentation define our culinary philosophy.</p>
+            </div>
+
+            <!-- Menu Categories -->
+            <div class="flex justify-center gap-8 mb-16 flex-wrap">
+                <button class="menu-tab active text-gold-400 border-b-2 border-gold-400 pb-2 font-medium transition-all" data-category="starters">Starters</button>
+                <button class="menu-tab text-gray-500 hover:text-white border-b-2 border-transparent pb-2 font-medium transition-all" data-category="mains">Main Courses</button>
+                <button class="menu-tab text-gray-500 hover:text-white border-b-2 border-transparent pb-2 font-medium transition-all" data-category="desserts">Desserts</button>
+                <button class="menu-tab text-gray-500 hover:text-white border-b-2 border-transparent pb-2 font-medium transition-all" data-category="wine">Wine Selection</button>
+            </div>
+
+            <!-- Menu Grid -->
+            <div class="grid md:grid-cols-2 gap-8" id="menuGrid">
+                <!-- Starters -->
+                <div class="menu-category space-y-6" data-category="starters">
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="font-serif text-xl font-semibold group-hover:text-gold-400 transition-colors">Truffle Arancini</h3>
+                                <span class="text-xs bg-gold-400/20 text-gold-400 px-2 py-1 rounded">Chef's Pick</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-3">Crispy risotto balls, black truffle, parmesan foam, micro herbs</p>
+                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                <span><i class="fas fa-leaf mr-1"></i>Vegetarian</span>
+                                <span><i class="fas fa-fire mr-1"></i>Contains Dairy</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$24</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-gold-400 transition-colors">Tuna Tartare</h3>
+                            <p class="text-gray-400 text-sm mb-3">Yellowfin tuna, avocado mousse, citrus ponzu, crispy wonton</p>
+                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                <span><i class="fas fa-fish mr-1"></i>Raw Fish</span>
+                                <span><i class="fas fa-exclamation-circle mr-1"></i>Gluten Free Option</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$32</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-gold-400 transition-colors">Foie Gras Terrine</h3>
+                            <p class="text-gray-400 text-sm mb-3">Duck foie gras, fig compote, brioche toast, aged balsamic</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$38</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-category space-y-6 hidden" data-category="mains">
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="font-serif text-xl font-semibold group-hover:text-gold-400 transition-colors">Wagyu Beef Tenderloin</h3>
+                                <span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">Popular</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-3">A5 Wagyu, truffle jus, roasted bone marrow, seasonal vegetables</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$95</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-gold-400 transition-colors">Pan-Seared Scallops</h3>
+                            <p class="text-gray-400 text-sm mb-3">Hokkaido scallops, cauliflower purée, crispy pancetta, lemon butter</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$48</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-gold-400 transition-colors">Rack of Lamb</h3>
+                            <p class="text-gray-400 text-sm mb-3">Herb-crusted lamb, ratatouille, rosemary jus, potato gratin</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$68</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-category space-y-6 hidden" data-category="desserts">
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-gold-400 transition-colors">Chocolate Soufflé</h3>
+                            <p class="text-gray-400 text-sm mb-3">Valrhona dark chocolate, vanilla crème anglaise, gold leaf</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$22</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-gold-400 transition-colors">Crème Brûlée</h3>
+                            <p class="text-gray-400 text-sm mb-3">Madagascar vanilla, caramelized sugar, fresh berries</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$18</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-category space-y-6 hidden" data-category="wine">
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-gold-400 transition-colors">Dom Pérignon 2012</h3>
+                            <p class="text-gray-400 text-sm mb-3">Champagne, France - Elegant, complex, notes of brioche and almond</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$450</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-card glass-panel p-6 rounded-xl flex justify-between items-start group cursor-pointer">
+                        <div class="flex-1">
+                            <h3 class="font-serif text-xl font-semibold mb-2 group-hover:text-gold-400 transition-colors">Opus One 2018</h3>
+                            <p class="text-gray-400 text-sm mb-3">Napa Valley - Bold, structured, black currant and dark chocolate</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-serif text-2xl text-gold-400">$685</p>
+                            <div class="star-rating text-xs mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-16">
+                <button class="border border-white/20 text-white px-8 py-3 rounded-full hover:bg-white hover:text-dark-900 transition-all duration-300">
+                    Download Full Menu PDF
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hours & Info Section -->
+    <section id="hours" class="py-32 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-gold-400/5 to-transparent pointer-events-none"></div>
+        
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-3 gap-12">
+                <!-- Hours Card -->
+                <div class="glass-panel p-8 rounded-2xl border border-gold-400/20 relative overflow-hidden group hover:border-gold-400/40 transition-all duration-500">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gold-400/10 rounded-full blur-3xl group-hover:bg-gold-400/20 transition-all"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-gold-400/10 rounded-full flex items-center justify-center mb-6 text-gold-400">
+                            <i class="far fa-clock text-xl"></i>
+                        </div>
+                        <h3 class="font-serif text-2xl font-bold mb-6">Opening Hours</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                <span class="text-gray-400">Monday - Thursday</span>
+                                <span class="font-medium">5:00 PM - 10:00 PM</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                <span class="text-gray-400">Friday - Saturday</span>
+                                <span class="font-medium text-gold-400">5:00 PM - 11:00 PM</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                <span class="text-gray-400">Sunday</span>
+                                <span class="font-medium">4:00 PM - 9:00 PM</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 text-sm">
+                                <span class="text-gold-400"><i class="fas fa-utensils mr-2"></i>Happy Hour</span>
+                                <span class="text-gray-400">5:00 PM - 7:00 PM (Tue-Thu)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location Card -->
+                <div class="glass-panel p-8 rounded-2xl border border-white/10 relative overflow-hidden group hover:border-gold-400/30 transition-all duration-500">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 text-blue-400">
+                            <i class="fas fa-map-marker-alt text-xl"></i>
+                        </div>
+                        <h3 class="font-serif text-2xl font-bold mb-6">Location</h3>
+                        
+                        <div class="space-y-4 text-gray-300">
+                            <p class="leading-relaxed">
+                                128 Rue de la Lumière<br>
+                                Manhattan, New York 10012<br>
+                                United States
+                            </p>
+                            <div class="pt-4 space-y-2 text-sm">
+                                <p class="flex items-center gap-2">
+                                    <i class="fas fa-phone text-gold-400"></i>
+                                    <span>+1 (212) 555-0199</span>
+                                </p>
+                                <p class="flex items-center gap-2">
+                                    <i class="fas fa-envelope text-gold-400"></i>
+                                    <span>reservations@lumiere.com</span>
+                                </p>
+                            </div>
+                            <button class="mt-4 text-gold-400 text-sm hover:underline flex items-center gap-1">
+                                Get Directions <i class="fas fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reservation Mini-Form -->
+                <div class="glass-panel p-8 rounded-2xl border border-white/10 relative overflow-hidden bg-gradient-to-br from-dark-800 to-dark-900">
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mb-6 text-green-400">
+                            <i class="far fa-calendar-check text-xl"></i>
+                        </div>
+                        <h3 class="font-serif text-2xl font-bold mb-2">Book a Table</h3>
+                        <p class="text-gray-400 text-sm mb-6">Reserve your experience today</p>
+                        
+                        <form class="space-y-4" onsubmit="event.preventDefault(); alert('Reservation request sent! We will confirm shortly.');">
+                            <div>
+                                <input type="text" placeholder="Your Name" class="w-full bg-dark-900/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-gold-400 focus:outline-none transition-colors">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="date" class="w-full bg-dark-900/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-gold-400 focus:outline-none transition-colors text-gray-400">
+                                <select class="w-full bg-dark-900/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-gold-400 focus:outline-none transition-colors text-gray-400">
+                                    <option>7:00 PM</option>
+                                    <option>7:30 PM</option>
+                                    <option>8:00 PM</option>
+                                    <option>8:30 PM</option>
+                                    <option>9:00 PM</option>
+                                </select>
+                            </div>
+                            <select class="w-full bg-dark-900/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-gold-400 focus:outline-none transition-colors text-gray-400">
+                                <option>2 Guests</option>
+                                <option>3 Guests</option>
+                                <option>4 Guests</option>
+                                <option>5-8 Guests</option>
+                                <option>8+ Guests</option>
+                            </select>
+                            <button type="submit" class="w-full bg-gold-400 text-dark-900 font-medium py-3 rounded-lg hover:bg-white transition-colors duration-300">
+                                Check Availability
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <section id="reviews" class="py-32 relative bg-dark-800/30">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20">
+                <p class="text-gold-400 uppercase tracking-[0.3em] text-sm mb-4">Testimonials</p>
+                <h2 class="font-serif text-5xl md:text-6xl font-bold mb-6">Guest Experiences</h2>
+                <div class="flex justify-center items-center gap-2 mb-4">
+                    <div class="star-rating text-2xl">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <span class="text-2xl font-serif font-bold ml-2">4.9</span>
+                    <span class="text-gray-400 text-sm ml-2">(2,847 reviews)</span>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Review 1 -->
+                <div class="glass-panel p-8 rounded-2xl relative review-card">
+                    <div class="absolute -top-4 -right-4 w-12 h-12 bg-gold-400 rounded-full flex items-center justify-center text-dark-900 font-serif text-2xl font-bold">"</div>
+                    <div class="star-rating text-sm mb-4">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 mb-6 leading-relaxed">"An absolutely transcendent dining experience. The Wagyu beef melted like butter, and the service was impeccable. Worth every penny for our anniversary dinner."</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Reviewer" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <p class="font-medium text-white">Sarah Mitchell</p>
+                            <p class="text-xs text-gray-500">Verified Diner • 2 days ago</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="glass-panel p-8 rounded-2xl relative review-card mt-8 md:mt-0">
+                    <div class="absolute -top-4 -right-4 w-12 h-12 bg-gold-400 rounded-full flex items-center justify-center text-dark-900 font-serif text-2xl font-bold">"</div>
+                    <div class="star-rating text-sm mb-4">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 mb-6 leading-relaxed">"The sommelier's wine pairing was extraordinary. Each course was perfectly complemented. The atmosphere is sophisticated yet warm. Already booked our next visit!"</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Reviewer" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <p class="font-medium text-white">James Chen</p>
+                            <p class="text-xs text-gray-500">Verified Diner • 1 week ago</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="glass-panel p-8 rounded-2xl relative review-card mt-8 md:mt-0">
+                    <div class="absolute -top-4 -right-4 w-12 h-12 bg-gold-400 rounded-full flex items-center justify-center text-dark-900 font-serif text-2xl font-bold">"</div>
+                    <div class="star-rating text-sm mb-4">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="text-gray-300 mb-6 leading-relaxed">"Michelin star quality without the pretension. The open kitchen concept is fascinating, and the chocolate soufflé is the best in the city. Highly recommend!"</p>
+                    <div class="flex items-center gap-4">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Reviewer" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <p class="font-medium text-white">Emma Rodriguez</p>
+                            <p class="text-xs text-gray-500">Verified Diner • 2 weeks ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Awards Strip -->
+            <div class="mt-24 pt-12 border-t border-white/10">
+                <div class="flex flex-wrap justify-center items-center gap-12 opacity-60">
+                    <div class="text-center">
+                        <i class="fas fa-award text-3xl text-gold-400 mb-2"></i>
+                        <p class="text-xs uppercase tracking-wider">Michelin 2024</p>
+                    </div>
+                    <div class="text-center">
+                        <i class="fas fa-certificate text-3xl text-gold-400 mb-2"></i>
+                        <p class="text-xs uppercase tracking-wider">Forbes 5 Star</p>
+                    </div>
+                    <div class="text-center">
+                        <i class="fas fa-trophy text-3xl text-gold-400 mb-2"></i>
+                        <p class="text-xs uppercase tracking-wider">James Beard</p>
+                    </div>
+                    <div class="text-center">
+                        <i class="fas fa-wine-glass text-3xl text-gold-400 mb-2"></i>
+                        <p class="text-xs uppercase tracking-wider">Wine Spectator</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark-900 border-t border-white/5 pt-20 pb-10">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12 mb-16">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 border border-gold-400/30 rounded-full flex items-center justify-center">
+                            <span class="font-serif text-gold-400">L</span>
+                        </div>
+                        <span class="font-serif text-xl tracking-wider">Lumière</span>
+                    </div>
+                    <p class="text-gray-500 text-sm leading-relaxed">Elevating dining to an art form. Every plate tells a story of passion, precision, and perfection.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium mb-4 text-white">Quick Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-500">
+                        <li><a href="#" class="hover:text-gold-400 transition-colors">About Us</a></li>
+                        <li><a href="#" class="hover:text-gold-400 transition-colors">Our Menu</a></li>
+                        <li><a href="#" class="hover:text-gold-400 transition-colors">Reservations</a></li>
+                        <li><a href="#" class="hover:text-gold-400 transition-colors">Private Events</a></li>
+                        <li><a href="#" class="hover:text-gold-400 transition-colors">Gift Cards</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium mb-4 text-white">Contact</h4>
+                    <ul class="space-y-2 text-sm text-gray-500">
+                        <li>128 Rue de la Lumière</li>
+                        <li>New York, NY 10012</li>
+                        <li>+1 (212) 555-0199</li>
+                        <li>reservations@lumiere.com</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium mb-4 text-white">Newsletter</h4>
+                    <p class="text-gray-500 text-sm mb-4">Subscribe for exclusive events and seasonal menus.</p>
+                    <div class="flex">
+                        <input type="email" placeholder="Email address" class="bg-dark-800 border border-white/10 rounded-l-lg px-4 py-2 text-sm flex-1 focus:border-gold-400 focus:outline-none">
+                        <button class="bg-gold-400 text-dark-900 px-4 py-2 rounded-r-lg hover:bg-white transition-colors">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-600 text-sm">© 2024 Lumière Dining. All rights reserved.</p>
+                <div class="flex gap-6">
+                    <a href="#" class="text-gray-500 hover:text-gold-400 transition-colors"><i class="fab fa-instagram text-xl"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-gold-400 transition-colors"><i class="fab fa-facebook text-xl"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-gold-400 transition-colors"><i class="fab fa-twitter text-xl"></i></a>
+                    <a href="#" class="text-gray-500 hover:text-gold-400 transition-colors"><i class="fab fa-yelp text-xl"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Register GSAP ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Custom Cursor Glow
+        const cursorGlow = document.getElementById('cursorGlow');
+        document.addEventListener('mousemove', (e) => {
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+        });
+
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('py-2');
+                navbar.classList.remove('py-4');
+            } else {
+                navbar.classList.add('py-4');
+                navbar.classList.remove('py-2');
+            }
+        });
+
+        // Hero Animations
+        const heroTl = gsap.timeline();
+        
+        heroTl.to('#titleLine1', {
+            y: 0,
+            duration: 1.2,
+            ease: "power4.out",
+            delay: 0.2
+        })
+        .to('#titleLine2', {
+            y: 0,
+            duration: 1.2,
+            ease: "power4.out"
+        }, "-=0.8")
+        .to('#heroDesc', {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power2.out"
+        }, "-=0.4")
+        .to('#heroButtons', {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power2.out"
+        }, "-=0.4")
+        .to('#scrollInd', {
+            opacity: 1,
+            duration: 0.8
+        }, "-=0.2");
+
+        // Hero Parallax
+        gsap.to('#heroImage', {
+            scrollTrigger: {
+                trigger: '#home',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: true
+            },
+            y: 200,
+            scale: 1
+        });
+
+        // About Section Animations
+        gsap.from('.about-img', {
+            scrollTrigger: {
+                trigger: '#about',
+                start: 'top 80%',
+                toggleActions: 'play none none reverse'
+            },
+            y: 100,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power3.out"
+        });
+
+        gsap.from('.about-text', {
+            scrollTrigger: {
+                trigger: '#about',
+                start: 'top 70%',
+                toggleActions: 'play none none reverse'
+            },
+            y: 30,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.2,
+            ease: "power2.out"
+        });
+
+        // Menu Cards Animation
+        gsap.from('.menu-card', {
+            scrollTrigger: {
+                trigger: '#menu',
+                start: 'top 70%',
+                toggleActions: 'play none none reverse'
+            },
+            y: 50,
+            opacity: 0,
+            duration: 0.6,
+            stagger: 0.1,
+            ease: "power2.out"
+        });
+
+        // Review Cards Animation
+        gsap.from('.review-card', {
+            scrollTrigger: {
+                trigger: '#reviews',
+                start: 'top 70%',
+                toggleActions: 'play none none reverse'
+            },
+            y: 60,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.2,
+            ease: "power3.out"
+        });
+
+        // Menu Tab Switching
+        const menuTabs = document.querySelectorAll('.menu-tab');
+        const menuCategories = document.querySelectorAll('.menu-category');
+
+        menuTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                menuTabs.forEach(t => {
+                    t.classList.remove('active', 'text-gold-400', 'border-gold-400');
+                    t.classList.add('text-gray-500', 'border-transparent');
+                });
+                tab.classList.add('active', 'text-gold-400', 'border-gold-400');
+                tab.classList.remove('text-gray-500', 'border-transparent');
+
+                // Show corresponding category
+                const category = tab.dataset.category;
+                menuCategories.forEach(cat => {
+                    if (cat.dataset.category === category) {
+                        cat.classList.remove('hidden');
+                        gsap.fromTo(cat.children, 
+                            { y: 20, opacity: 0 },
+                            { y: 0, opacity: 1, duration: 0.4, stagger: 0.1 }
+                        );
+                    } else {
+                        cat.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Smooth Scroll for Navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add hover effect to menu cards
+        document.querySelectorAll('.menu-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                gsap.to(card, {
+                    scale: 1.02,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            });
+            card.addEventListener('mouseleave', () => {
+                gsap.to(card, {
+                    scale: 1,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            });
+        });
+    </script>
+</body>
+</html>
